@@ -42,6 +42,8 @@ These screenshots show the main flows in the app:
 
 ## 🌐 Production Hosting
 
+The frontend is hosted on Vercel and the backend API is hosted on Render.
+
 For VPS/cloud deployment using the `testing` branch, see **`HOSTING.md`**.
 
 It includes:
@@ -59,31 +61,11 @@ It includes:
 - **Docker Desktop** installed and running ([Download](https://www.docker.com/products/docker-desktop/))
 - **Git**
 
-### Steps
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/your-username/pict-cie-platform.git
-cd pict-cie-platform
-
-# 2. Create backend environment file
-cp backend/.env.example backend/.env
-
-# 3. (Optional) Edit backend/.env to add your Gemini API key for AI features
-#    Get a free key at: https://aistudio.google.com/apikey
-#    Set: GEMINI_API_KEY=your-key-here
-
-# 4. Build and start all services
-docker compose up --build -d
-
-# 5. Wait ~30 seconds for MongoDB to initialize, then seed the admin user
-docker exec pict-cie-backend node utils/seed.js
 ```
 
 ### 6. Open the app
 
 - **App URL:** https://cie-platform-alpha.vercel.app
-- **Login:** `admin@pict.edu` / `Admin@123`
 
 That's it! The platform is running with:
 - **MongoDB** on port 27017
@@ -129,14 +111,6 @@ npm run dev
 Open http://localhost:5173
 
 ---
-
-## 🔑 Default Credentials
-
-| Role  | Email           | Password   |
-|-------|-----------------|------------|
-| Admin | admin@pict.edu  | Admin@123  |
-
-> Create faculty accounts from the **Users** page after logging in as Admin.
 
 ---
 
