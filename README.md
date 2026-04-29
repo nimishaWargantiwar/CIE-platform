@@ -20,13 +20,25 @@ A production-ready MERN stack web application for managing **Continuous Internal
 
 These screenshots show the main flows in the app:
 
-| Admin Login | Faculty Login | Login Page |
-|---|---|---|
-| ![Admin Login](screenshots/Admin_login.png) | ![Faculty Login](screenshots/Faculty_login.png) | ![Login Page](screenshots/Login_page.png) |
+### Admin Login
 
-| Activities | Learning Center |
-|---|---|
-| ![Activities](screenshots/Activities.png) | ![Learning Center](screenshots/Learning_Center.png) |
+![Admin Login](screenshots/Admin_login.png)
+
+### Faculty Login
+
+![Faculty Login](screenshots/Faculty_login.png)
+
+### Login Page
+
+![Login Page](screenshots/Login_page.png)
+
+### Activities
+
+![Activities](screenshots/Activities.png)
+
+### Learning Center
+
+![Learning Center](screenshots/Learning_Center.png)
 
 ## 🌐 Production Hosting
 
