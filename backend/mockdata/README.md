@@ -30,11 +30,4 @@ node mockdata/seedMockData.js --reset
 | Scores | ~105 | DSAL PPT + GD fully graded |
 | Final Results | 15 | DSAL results computed out of /15 |
 
-## Login credentials
-
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@pict.edu | Admin@123 |
-| Faculty | priya.sharma@pict.edu | Faculty@123 |
-| Faculty | rajesh.deshmukh@pict.edu | Faculty@123 |
-| Faculty | anita.kulkarni@pict.edu | Faculty@123 |
+The seed script creates sample admin and faculty users for testing.
