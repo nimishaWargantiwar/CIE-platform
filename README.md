@@ -82,6 +82,9 @@ docker compose up --build -d
 docker exec pict-cie-backend node utils/seed.js
 ```
 
+
+```
+
 ### 6. Open the app
 
 - **App URL:** https://cie-platform-alpha.vercel.app
