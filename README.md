@@ -16,6 +16,18 @@ A production-ready MERN stack web application for managing **Continuous Internal
 - **Conduction Guidelines** — Built-in faculty guidelines for each activity type (PPT, Viva, GD, Lab, etc.)
 - **Docker Deployment** — Full Docker Compose setup with MongoDB, Node.js Backend, and Nginx-served React Frontend
 
+## 📸 Screenshots
+
+These screenshots show the main flows in the app:
+
+| Admin Login | Faculty Login | Login Page |
+|---|---|---|
+| ![Admin Login](screenshots/Admin_login.png) | ![Faculty Login](screenshots/Faculty_login.png) | ![Login Page](screenshots/Login_page.png) |
+
+| Activities | Learning Center |
+|---|---|
+| ![Activities](screenshots/Activities.png) | ![Learning Center](screenshots/Learning_Center.png) |
+
 ## 🌐 Production Hosting
 
 For VPS/cloud deployment using the `testing` branch, see **`HOSTING.md`**.
