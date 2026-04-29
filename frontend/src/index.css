@@ -1,0 +1,145 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --panel-bg: #f1f5f9;
+  --panel-ink: #0f172a;
+  --panel-muted: #475569;
+  --panel-line: #dbe4ef;
+  --panel-brand: #0ea5e9;
+  --panel-brand-strong: #0369a1;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  font-family: 'IBM Plex Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--panel-ink);
+  background:
+    radial-gradient(circle at 8% -10%, #c5f0ff 0%, rgba(197, 240, 255, 0) 45%),
+    radial-gradient(circle at 92% 4%, #d4f4ff 0%, rgba(212, 244, 255, 0) 40%),
+    var(--panel-bg);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.page-title {
+  font-family: 'Sora', 'IBM Plex Sans', sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* ===================== */
+/* Reusable Utility Classes */
+/* ===================== */
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-transparent
+           bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white
+           shadow-[0_10px_25px_-18px_rgba(14,165,233,0.95)] transition-all duration-200
+           hover:-translate-y-0.5 hover:from-sky-700 hover:to-cyan-600 hover:shadow-[0_16px_28px_-18px_rgba(14,165,233,0.95)]
+           focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2
+           disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white/90 px-4 py-2.5
+           text-sm font-semibold text-slate-700 shadow-[0_6px_18px_-14px_rgba(15,23,42,0.85)] transition-all duration-200
+           hover:-translate-y-0.5 hover:border-slate-400 hover:bg-white
+           focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2
+           disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-transparent bg-red-600 px-4 py-2.5
+           text-sm font-semibold text-white shadow-[0_10px_24px_-18px_rgba(220,38,38,0.9)] transition-all duration-200
+           hover:-translate-y-0.5 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2
+           disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
+  }
+
+  .input {
+    @apply block w-full rounded-xl border border-slate-300 bg-white/95 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400
+           shadow-[0_4px_14px_-12px_rgba(15,23,42,0.8)] transition-all duration-200
+           focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-300
+           disabled:cursor-not-allowed disabled:bg-slate-100;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-slate-700;
+  }
+
+  .card {
+    @apply rounded-2xl border border-slate-200/80 bg-white/90 p-6 shadow-[0_18px_35px_-26px_rgba(15,23,42,0.85)] backdrop-blur;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold text-slate-900;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .panel-card {
+    @apply rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-[0_16px_35px_-28px_rgba(15,23,42,0.8)] backdrop-blur;
+  }
+
+  .panel-card-strong {
+    @apply rounded-2xl border border-sky-200/90 bg-gradient-to-br from-white via-sky-50 to-cyan-50 p-5 shadow-[0_20px_38px_-28px_rgba(14,165,233,0.85)];
+  }
+}
+
+/* AG Grid theme overrides */
+.ag-theme-alpine {
+  --ag-header-background-color: #0f172a;
+  --ag-header-foreground-color: #ffffff;
+  --ag-row-hover-color: #ecfeff;
+  --ag-background-color: #f8fafc;
+  --ag-borders: solid 1px;
+  --ag-border-color: #dbe4ef;
+  --ag-font-size: 13px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #dbe4ef;
+  box-shadow: 0 22px 34px -30px rgba(15, 23, 42, 0.9);
+}
+
+.ag-theme-alpine .ag-header-cell-label {
+  font-weight: 600;
+}
+
+.ag-theme-alpine .ag-row {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 999px;
+}
+
+/* Spinner animation */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}

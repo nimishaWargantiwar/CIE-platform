@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+
+# Build
+frontend/dist/
+backend/uploads/
+
+# Logs
+*.log
+npm-debug.log*
+backend/logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Docker volumes
+mongo-data/
+
+# Backups
+backend/backups/
+
+# Setup scripts (contain API keys)
+setup.bat
+setup.sh
+
+.generated_files/
+build/
+dist/
+nbproject/
+Makefile*
+Package-*
+private/
+_build/
+!cmake/**/user.cmake
+cmake/**/.generated/*
+cmake/**/CMake*
+out/

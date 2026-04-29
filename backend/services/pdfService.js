@@ -1,0 +1,377 @@
+// ==========================================
+// PDF Service — Report generation using PDFKit
+// ==========================================
+
+const PDFDocument = require('pdfkit');
+
+function formatDate(value) {
+  if (!value) return 'N/A';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return 'N/A';
+  return d.toLocaleString();
+}
+
+function ensurePageSpace(doc, needed = 80) {
+  const bottom = doc.page.height - doc.page.margins.bottom;
+  if (doc.y + needed > bottom) {
+    doc.addPage();
+  }
+}
+
+function textOrNA(value) {
+  return `${value || ''}`.trim() || 'N/A';
+}
+
+function drawSectionTitle(doc, title) {
+  const contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+  ensurePageSpace(doc, 34);
+  doc.moveDown(0.4);
+  const x = doc.page.margins.left;
+  const y = doc.y;
+
+  doc.save();
+  doc.roundedRect(x, y, contentWidth, 22, 4).fill('#EEF4FF');
+  doc.restore();
+
+  doc.fillColor('#1D4ED8')
+    .font('Helvetica-Bold')
+    .fontSize(11)
+    .text(title, x + 10, y + 6, { width: contentWidth - 20 });
+
+  doc.fillColor('#111827');
+  doc.y = y + 26;
+}
+
+function drawInfoGrid(doc, items) {
+  const contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+  const gap = 14;
+  const colWidth = (contentWidth - gap) / 2;
+
+  for (let i = 0; i < items.length; i += 2) {
+    ensurePageSpace(doc, 34);
+    const y = doc.y;
+    const left = items[i];
+    const right = items[i + 1];
+
+    if (left) {
+      doc.font('Helvetica-Bold').fontSize(9).fillColor('#374151')
+        .text(left.label, doc.page.margins.left, y, { width: colWidth });
+      doc.font('Helvetica').fontSize(10).fillColor('#111827')
+        .text(textOrNA(left.value), doc.page.margins.left, y + 12, { width: colWidth });
+    }
+
+    if (right) {
+      const rightX = doc.page.margins.left + colWidth + gap;
+      doc.font('Helvetica-Bold').fontSize(9).fillColor('#374151')
+        .text(right.label, rightX, y, { width: colWidth });
+      doc.font('Helvetica').fontSize(10).fillColor('#111827')
+        .text(textOrNA(right.value), rightX, y + 12, { width: colWidth });
+    }
+
+    doc.y = y + 30;
+  }
+}
+
+function addPageNumbers(doc) {
+  const range = doc.bufferedPageRange();
+  for (let i = range.start; i < range.start + range.count; i++) {
+    doc.switchToPage(i);
+    const pageNumber = i - range.start + 1;
+    const contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+    doc.fontSize(8)
+      .font('Helvetica')
+      .fillColor('#6B7280')
+      .text(`Page ${pageNumber} of ${range.count}`, doc.page.margins.left, doc.page.height - 24, {
+        width: contentWidth,
+        align: 'right',
+      });
+  }
+  doc.fillColor('#111827');
+}
+
+/**
+ * Generate NAAC/NBA report as PDF buffer.
+ */
+async function generateReportPDF(reportData) {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ margin: 50, size: 'A4' });
+      const buffers = [];
+
+      doc.on('data', (chunk) => buffers.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(buffers)));
+
+      // Title
+      doc.fontSize(18).font('Helvetica-Bold')
+        .text('PICT Smart CIE Evaluation Report', { align: 'center' });
+      doc.moveDown(0.5);
+      doc.fontSize(14).font('Helvetica')
+        .text(`${reportData.reportType} Report`, { align: 'center' });
+      doc.moveDown();
+
+      // Metadata
+      doc.fontSize(10).font('Helvetica');
+      doc.text(`Subject: ${reportData.subjectName} (${reportData.subjectCode})`);
+      doc.text(`Faculty: ${reportData.facultyName}`);
+      doc.text(`Class: ${reportData.className}`);
+      doc.text(`Academic Year: ${reportData.academicYear}`);
+      doc.text(`Generated: ${new Date().toLocaleDateString()}`);
+      doc.moveDown();
+      doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+      doc.moveDown();
+
+      // Sections
+      const sections = [
+        { title: 'Activities Conducted', content: reportData.content.activitiesConducted },
+        { title: 'Rubrics Used', content: reportData.content.rubrics },
+        { title: 'Evaluation Method', content: reportData.content.evaluationMethod },
+        { title: 'Score Distribution', content: reportData.content.scoreDistribution },
+        { title: 'Observations', content: reportData.content.observations },
+        { title: 'Weakness Analysis', content: reportData.content.weaknessAnalysis },
+        { title: 'Improvement Actions', content: reportData.content.improvementActions },
+        { title: 'Outcome Narrative', content: reportData.content.outcomeNarrative },
+      ];
+
+      for (const section of sections) {
+        if (section.content) {
+          doc.fontSize(12).font('Helvetica-Bold').text(section.title);
+          doc.moveDown(0.3);
+          doc.fontSize(10).font('Helvetica').text(section.content, { lineGap: 2 });
+          doc.moveDown();
+        }
+      }
+
+      // Footer
+      doc.moveDown();
+      doc.fontSize(8).font('Helvetica')
+        .text('Generated by PICT Smart CIE Evaluation Platform', { align: 'center' });
+
+      doc.end();
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+/**
+ * Generate detailed activity report PDF buffer with optional conduction images.
+ */
+async function generateActivityReportPDF(reportData) {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ margin: 42, size: 'A4', bufferPages: true });
+      const buffers = [];
+
+      doc.on('data', (chunk) => buffers.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(buffers)));
+
+      const { activity, subject, faculty, rubrics, studentRows, summary, templateGuide, images } = reportData;
+      const contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+      const maxRaw = rubrics.length * 5;
+
+      // Cover header
+      doc.fontSize(18).font('Helvetica-Bold').fillColor('#111827')
+        .text('PICT Smart CIE Activity Report', { align: 'center' });
+      doc.moveDown(0.6);
+      doc.fontSize(13).font('Helvetica-Bold').fillColor('#1F2937')
+        .text(textOrNA(activity.name), { align: 'center' });
+      doc.moveDown(0.2);
+      doc.fontSize(10).font('Helvetica').fillColor('#6B7280')
+        .text(`Generated: ${formatDate(new Date())}`, { align: 'center' });
+      doc.fillColor('#111827').moveDown();
+
+      drawSectionTitle(doc, '1. Activity Information');
+      drawInfoGrid(doc, [
+        { label: 'Activity ID', value: activity.id },
+        { label: 'Activity Type', value: activity.type },
+        { label: 'Topic', value: activity.topic },
+        { label: 'Status', value: textOrNA(activity.status).toUpperCase() },
+        { label: 'Total Marks', value: Number(activity.totalMarks) || 0 },
+        { label: 'Created At', value: formatDate(activity.createdAt) },
+        { label: 'Submitted At', value: formatDate(activity.submittedAt) },
+        { label: 'Locked At', value: formatDate(activity.lockedAt) },
+        { label: 'Subject', value: `${textOrNA(subject.name)} (${textOrNA(subject.code)})` },
+        { label: 'Class', value: subject.className },
+        { label: 'Academic Year', value: subject.academicYear },
+        { label: 'Faculty', value: `${textOrNA(faculty.name)} (${textOrNA(faculty.email)})` },
+      ]);
+
+      if (activity.guidelines) {
+        ensurePageSpace(doc, 60);
+        doc.moveDown(0.2);
+        doc.font('Helvetica-Bold').text('Guidelines');
+        doc.font('Helvetica').text(activity.guidelines, { lineGap: 2 });
+      }
+
+      if (activity.videoUrl) {
+        doc.moveDown(0.4);
+        doc.font('Helvetica-Bold').text('Reference Video URL');
+        doc.font('Helvetica').text(activity.videoUrl);
+      }
+
+      // Conduction guide
+      if (templateGuide) {
+        drawSectionTitle(doc, '2. Conduction Guide Snapshot');
+        doc.fontSize(10).font('Helvetica');
+        doc.text(`Objective: ${textOrNA(templateGuide.objective)}`);
+
+        const outcomes = Array.isArray(templateGuide.outcomes) ? templateGuide.outcomes : [];
+        if (outcomes.length) {
+          doc.moveDown(0.2).font('Helvetica-Bold').text('Outcomes');
+          doc.font('Helvetica');
+          outcomes.forEach((o) => doc.text(`- ${o}`));
+        }
+
+        const bestPractices = Array.isArray(templateGuide.bestPractices) ? templateGuide.bestPractices : [];
+        if (bestPractices.length) {
+          doc.moveDown(0.2).font('Helvetica-Bold').text('Best Practices');
+          doc.font('Helvetica');
+          bestPractices.forEach((p) => doc.text(`- ${p}`));
+        }
+      }
+
+      // Rubrics and criteria
+      drawSectionTitle(doc, '3. Rubrics And Criteria');
+
+      if (!rubrics.length) {
+        doc.fontSize(10).font('Helvetica').text('No rubrics configured for this activity.');
+      } else {
+        rubrics.forEach((rubric, index) => {
+          const cardHeight = 108;
+          ensurePageSpace(doc, cardHeight + 10);
+          const x = doc.page.margins.left;
+          const y = doc.y;
+
+          doc.roundedRect(x, y, contentWidth, cardHeight, 5).strokeColor('#D1D5DB').lineWidth(1).stroke();
+          doc.fontSize(10).font('Helvetica-Bold').fillColor('#111827').text(`${index + 1}. ${textOrNA(rubric.name)}`, x + 10, y + 8, {
+            width: contentWidth - 20,
+          });
+
+          doc.y = y + 28;
+          doc.font('Helvetica');
+          doc.text(`1: ${textOrNA(rubric.criteria?.scale1)}`, x + 14, doc.y, { width: contentWidth - 28 });
+          doc.text(`2: ${textOrNA(rubric.criteria?.scale2)}`, x + 14, doc.y + 2, { width: contentWidth - 28 });
+          doc.text(`3: ${textOrNA(rubric.criteria?.scale3)}`, x + 14, doc.y + 2, { width: contentWidth - 28 });
+          doc.text(`4: ${textOrNA(rubric.criteria?.scale4)}`, x + 14, doc.y + 2, { width: contentWidth - 28 });
+          doc.text(`5: ${textOrNA(rubric.criteria?.scale5)}`, x + 14, doc.y + 2, { width: contentWidth - 28 });
+          doc.y = y + cardHeight + 6;
+        });
+      }
+
+      // Score summary
+      drawSectionTitle(doc, '4. Score Summary');
+      drawInfoGrid(doc, [
+        { label: 'Total Students', value: Number(summary.totalStudents) || 0 },
+        { label: 'Students With Scores', value: Number(summary.gradedStudents) || 0 },
+        { label: 'Average Activity Marks', value: `${Number(summary.averageMarks || 0).toFixed(2)} / ${Number(activity.totalMarks) || 0}` },
+        { label: 'Conduction Images Attached', value: Array.isArray(images) ? images.length : 0 },
+      ]);
+
+      // Student-level table
+      drawSectionTitle(doc, '5. Student-Wise Details');
+      if (!studentRows.length) {
+        doc.fontSize(10).font('Helvetica').text('No students found for this class and academic year.');
+      } else {
+        const cols = [
+          { key: 'rollNo', label: 'Roll No', width: 70, align: 'left' },
+          { key: 'name', label: 'Student Name', width: 175, align: 'left' },
+          { key: 'raw', label: 'Raw', width: 80, align: 'right' },
+          { key: 'marks', label: 'Marks', width: 80, align: 'right' },
+          { key: 'status', label: 'Status', width: 90, align: 'center' },
+        ];
+
+        const rowHeight = 20;
+        const drawTableHeader = () => {
+          ensurePageSpace(doc, rowHeight + 4);
+          const x = doc.page.margins.left;
+          const y = doc.y;
+          doc.rect(x, y, contentWidth, rowHeight).fill('#F3F4F6');
+          let currentX = x;
+          cols.forEach((col) => {
+            doc.fillColor('#111827').font('Helvetica-Bold').fontSize(9).text(col.label, currentX + 6, y + 6, {
+              width: col.width - 12,
+              align: col.align,
+            });
+            currentX += col.width;
+          });
+          doc.y = y + rowHeight;
+        };
+
+        drawTableHeader();
+        studentRows.forEach((row, idx) => {
+          if (doc.y + rowHeight > doc.page.height - doc.page.margins.bottom) {
+            doc.addPage();
+            drawSectionTitle(doc, '5. Student-Wise Details (Continued)');
+            drawTableHeader();
+          }
+
+          const x = doc.page.margins.left;
+          const y = doc.y;
+          const even = idx % 2 === 0;
+          doc.rect(x, y, contentWidth, rowHeight).fill(even ? '#FFFFFF' : '#FAFAFA');
+          doc.rect(x, y, contentWidth, rowHeight).strokeColor('#E5E7EB').lineWidth(0.4).stroke();
+
+          const cells = {
+            rollNo: textOrNA(row.rollNo),
+            name: textOrNA(row.name),
+            raw: `${Number(row.rawTotal || 0).toFixed(0)}/${maxRaw || 0}`,
+            marks: `${Number(row.activityMarks || 0).toFixed(2)}/${Number(activity.totalMarks) || 0}`,
+            status: Number(row.rawTotal || 0) > 0 ? 'Scored' : 'Pending',
+          };
+
+          let currentX = x;
+          cols.forEach((col) => {
+            doc.fillColor('#111827').font('Helvetica').fontSize(9).text(cells[col.key], currentX + 6, y + 6, {
+              width: col.width - 12,
+              align: col.align,
+            });
+            currentX += col.width;
+          });
+          doc.y = y + rowHeight;
+        });
+      }
+
+      // Conduction images
+      if (Array.isArray(images) && images.length > 0) {
+        doc.addPage();
+        drawSectionTitle(doc, '6. Activity Conduction Images');
+
+        images.forEach((image, idx) => {
+          ensurePageSpace(doc, 280);
+          doc.fontSize(10).font('Helvetica-Bold').fillColor('#111827').text(`Image ${idx + 1}: ${textOrNA(image.originalname)}`);
+          doc.moveDown(0.15);
+
+          try {
+            const imageX = doc.page.margins.left;
+            const imageY = doc.y;
+            const imageWidth = contentWidth;
+            const frameHeight = 224;
+
+            doc.roundedRect(imageX, imageY, imageWidth, frameHeight, 4).strokeColor('#D1D5DB').lineWidth(1).stroke();
+            doc.image(image.buffer, imageX, imageY, {
+              fit: [imageWidth - 8, frameHeight - 8],
+              align: 'center',
+              valign: 'center',
+            });
+            doc.y = imageY + frameHeight + 6;
+          } catch {
+            doc.fontSize(9).font('Helvetica').text('Could not render this image in PDF.');
+            doc.moveDown(0.4);
+          }
+        });
+      }
+
+      drawSectionTitle(doc, '7. Generation Metadata');
+      doc.fontSize(9).font('Helvetica')
+        .text(`Generated by: ${textOrNA(reportData.generatedBy)} on ${formatDate(new Date())}`, { align: 'center' });
+
+      addPageNumbers(doc);
+
+      doc.end();
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+module.exports = { generateReportPDF, generateActivityReportPDF };
